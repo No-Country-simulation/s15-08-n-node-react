@@ -1,86 +1,32 @@
-import TipsModel from './model/TipsModel';
+import {Request, Response} from 'express';
+import TipsController from '@modules/tableTips/TipsController';
+import TipsHelper from '@modules/tableTips/TipsHelper';
 
 export default class TipsServices {
-    public findAll = async (): Promise<any> => {
-        try {
-            let tips = await TipsModel.findAll();
 
-            //buscar los peces que esten relacionados con los tips
+    private helperT: TipsHelper;
+    private controllerT: TipsController;
 
-            return tips;
-        } catch (error) {
-            /* deberia devolver un objeto con varios atributos? */
-            return null;
-        }
-    };
+    constructor()
+    {
+        this.helperT = new TipsHelper();
+        this.controllerT = new TipsController;
+    }
 
-    public findOne = async (id: any): Promise<any> => {
-        try {
-            const tip = await TipsModel.findOne({
-                where: {
-                    id_tip: id
-                }
-            });
+    public findAll = async(_req: Request, res: Response): Promise<any> => {
+        try
+        {
+            const tips = await this.controllerT.findAll();
 
-            /* buscar si tiene asociado un pez */
-            return tip;
-        } catch (error) {
-            return null;
-        }
-    };
-
-    public createTip = async (body: any): Promise<any> => {
-        try {
-            //verificar que el id_fish existe, ya que solo ponemos 3 peces
-            const tip = await TipsModel.create({
-                id_user: body.id_user,
-                id_fish: body.id_fish,
-                zone: body.zone,
-                description: body.description
-            });
-
-            return tip;
-        } catch (error) {
-            return null;
-        }
-    };
-
-    public updateTip = async (id: any, body: any): Promise<any> => {
-        try {
-            const tip = await this.findOne(id);
-
-            if (tip === null) {
-                return null;
+            if(tips.length === 0 || tips.length === null)
+            {
+                res.status(400).json({message: "No se pudieron encontrar los consejos"});
             }
 
-            /*verificar que el id_fish sea 1, 2 o 3 */
-            await tip.update({
-                id_user: body.id_user,
-                id_fish: body.id_fish,
-                zone: body.zone,
-                description: body.description
-            });
+            res.status(200).json(tips);
 
-            await tip.save();
-            return tip;
-        } catch (error) {
-            return null;
+        }catch(error){
+            res.status(500).json({error: 'Hubo un problema con el servidor'})
         }
-    };
-
-    public deleteTip = async (id: any): Promise<any> => {
-        try {
-            const tip = await this.findOne(id);
-
-            if (tip === null) {
-                return null;
-            }
-
-            await tip.destroy();
-            return 'Tip borrado con exito'; //deberia devolver otra cosa, como al propio usuario administrador
-        } catch (error) {
-            return null;
-        }
-    };
+    }
 }
-
